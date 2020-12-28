@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    char* filename = "/Volumes/longmao/openProject/database/cdb/mydb.db";
+    char* filename = argv[1];
     Table* table = db_open(filename);
 
     InputBuffer *input_buffer = new_input_buffer();
