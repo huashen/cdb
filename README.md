@@ -3,3 +3,10 @@
 
 ### 阶段一：制作一个简单的命令行执行程序
 ### 阶段二：识别insert和select语句
+
+
+
+### clion program arguments
+```
+/Volumes/longmao/openProject/database/cdb/mydb.db
+```
