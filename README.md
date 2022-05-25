@@ -10,3 +10,15 @@
 ```
 /Volumes/longmao/openProject/database/cdb/mydb.db
 ```
+
+### 插入数据：
+
+```
+insert 9 huashen huashen361@163.com
+```
+
+
+### 查询数据
+```
+select
+```
