@@ -28,3 +28,17 @@ typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT
 } StatementType;
+
+// 执行结果状态码
+typedef enum {
+   EXECUTE_SUCCESS,
+   EXECUTE_DUPLICATE_KEY,
+   EXECUTE_FULL_TABLE
+} ExecuteResult;
+
+// 输入原文的结构
+typedef struct {
+    char* buffer;
+    uint32_t buffer_length;
+    uint32_t str_length;
+} InputBuffer;
