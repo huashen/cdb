@@ -77,4 +77,14 @@ typedef struct {
 } Statement;
 
 #define FORLESS(less) for (int i =0; i < less; i++)
+// 查看属性大小
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
+
+//ROW_SIZE指真实数据大小
+const uint32_t ID_OFFSET = 0;
+const uint32_t ID_SIZE = size_of_attribute(Row, id);
+const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;//4
+const uint32_t USERNAME_SIZE = size_of_attribute(Row, username); // 33
+const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;// 37 = 4 + 33
+const uint32_t EMAIL_SIZE = size_of_attribute(Row, email); //256
+const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE; //293 = 4 + 33 + 256
