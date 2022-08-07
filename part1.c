@@ -109,3 +109,30 @@ typedef struct {
     uint32_t row_nums;
 } Table;
 
+/**数据库操作相关方法**/
+void del_table(Table* table) {
+    free(table->pager);
+    table->pager = NULL;
+    free(table);
+}
+
+//根据打开的文件，返回出Table上下文
+Table* db_open(const char* filename);
+
+void print_row(Row* row) {
+    printf("(%d %s %s)\n", row->id, row->username, row->email);
+}
+
+//读取用户输入
+void read_line(InputBuffer* input_buffer) {
+    ssize_t  bytes_read = getline(&input_buffer->buffer, &input_buffer->buffer_length, stdin);
+    if (bytes_read == -1) {
+        printf("get user input error: %s.\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    input_buffer->buffer[strlen(input_buffer->buffer) - 1] = '\0';
+    input_buffer->str_length = strlen(input_buffer->buffer);
+}
+
+
+
