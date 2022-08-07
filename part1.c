@@ -94,3 +94,18 @@ const uint32_t TABLE_MAX_PAGES = 100; //最大100页
 const uint32_t ROW_PER_PAGES = PAGE_SIZE / ROW_SIZE; // 13 = 4096 / 293
 const uint32_t TABLE_MAX_ROWS = TABLE_MAX_PAGES * ROW_PER_PAGES; //1300
 
+//页面属性
+typedef struct {
+    void* pages[TABLE_MAX_PAGES];
+    int file_descriptor;
+    int file_length;
+} Pager;
+
+//Table属性
+typedef struct {
+    //保存页面数据
+    Pager* pager;
+    //记录当前已有的row数据量，读入/写入
+    uint32_t row_nums;
+} Table;
+
