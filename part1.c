@@ -134,5 +134,58 @@ void read_line(InputBuffer* input_buffer) {
     input_buffer->str_length = strlen(input_buffer->buffer);
 }
 
+void db_close(Table* table) {
+    Pager* pager = table->pager;
+
+}
+
+MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) {
+    //模拟退出时保存数据
+    if (strcmp(input_buffer->buffer, ".exit") == 0) {
+        db_close(table);
+        exit(EXIT_SUCCESS);
+    }
+    return META_COMMAND_UNRECOGNIZED;
+}
+
+Table* db_open(const char* filename) {
+
+}
+
+
+/**
+ * 主入口
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main(int argc, char** argv) {
+    char* filename;
+    if (argc > 1) {
+        filename = argv[1];
+    }
+
+    Table* table = db_open(filename);
+
+    while (true) {
+        printf("> ");
+        InputBuffer* input_buffer = new_input_buffer();
+        read_line(input_buffer);
+
+        //对原字符进行识别是否是辅助指令
+        if (input_buffer->buffer[0] == '.') {
+            switch (do_meta_command(input_buffer, table)) {
+                case META_COMMAND_SUCCESS:
+                    continue;
+                case META_COMMAND_UNRECOGNIZED:
+                    printf("unrecognized command: %s.\n", input_buffer->buffer);
+                    continue;
+            }
+        }
+        Statement statement;
+    }
+}
+
 
 

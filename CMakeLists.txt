@@ -3,4 +3,5 @@ project(cdb C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(cdb main.c part1.c)
+add_executable(cdb main.c)
+add_executable(cdb1 part1.c)
