@@ -135,7 +135,7 @@ void read_line(InputBuffer* input_buffer) {
 }
 
 void db_close(Table* table) {
-    Pager* pager = table->pager;
+//    Pager* pager = table->pager;
 
 }
 
@@ -148,9 +148,46 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) {
     return META_COMMAND_UNRECOGNIZED;
 }
 
-Table* db_open(const char* filename) {
+Pager* pager_open(const char* filename) {
+    int fd = open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+        printf("open file: %s error: %s.\n", filename, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
+    size_t read_bytes = lseek(fd, 0, SEEK_END);
+    if (read_bytes == -1) {
+        printf("seek file: %s error: %s. \n", filename, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    Pager* pager = malloc(sizeof(Pager));
+    pager->file_descriptor = fd;
+    pager->file_length = read_bytes;
+    FORLESS(TABLE_MAX_PAGES) {pager -> pages[i] = NULL;}
+    return pager;
 }
+
+Table* db_open(const char* filename) {
+    Pager* pager = pager_open(filename);
+    int num_rows = pager->file_length / ROW_SIZE;
+
+    Table* table = malloc(sizeof(Table));
+    table->pager = pager;
+    table->row_nums = num_rows;
+    return table;
+}
+
+PrepareResult  prepare_insert(InputBuffer* input_buffer, Statement* statement) {
+    static char* token = " ";
+    strtok(input_buffer->buffer, token);
+}
+
+PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
+    if (strncmp(input_buffer->buffer, "insert", 6) == 0) {
+        return prepare_insert(input_buffer, statement);
+    }
+}
+
 
 
 /**
@@ -184,6 +221,10 @@ int main(int argc, char** argv) {
             }
         }
         Statement statement;
+        switch (prepare_statement(input_buffer, &statement)) {
+            case PREPARE_SUCCESS:
+                break;
+        }
     }
 }
 
