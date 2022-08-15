@@ -218,6 +218,99 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
+/**
+ * 根据page_num 在pager->pages 中找到对应的内存数据，如果没有，那就创建一个
+ * 并且根据pager->file_length 对比是否大于查询的page_num, 超过则将文件内容复制给已申请的内存
+ * 
+ * @param pager 
+ * @param page_num 
+ * @return void* 
+ */
+void* get_page(Pager* pager, uint32_t page_num) {
+    if (pager->pages[page_num] == null) {
+        void* page = malloc(PAGE_SIZE);
+        //查看是否需要从文件中读取，如果有的话
+        uint32_t file_page_full_num = pager->file_length / PAGE_SIZE;
+        if (pager->file_length % PAGE_SIZE) {
+            file_page_full_num += 1;
+        }
+        //说明文件中有数据，需要去获取对应的页面数据
+        if(file_page_full_num >= page_num) {
+            off_t offset = lseek(pager->file_descriptor, page_num * PAGE_SIZE, SEEK_SET);
+            if (offset == -1) {
+                printf("get page error seek: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            ssize_t read_bytes = read(pager->file_descriptor, page, PAGE_SIZE);
+            if (read_bytes == -1) {
+                printf("get page error read: %s. \n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }        
+        }
+        pager->pages[page_num] = page;
+    }
+    return pager->pages[page_num];
+}
+
+/**
+ * @brief 获取row_index在内存中位置
+ * 
+ * @param table 
+ * @param row_num 
+ * @return void* 
+ */
+void* row_slot(Table* table, uint32_t row_num) {
+    Pager* pager = table->pager;
+    //首先找到page_num
+    uint32_t page_num = row_num / ROW_PER_PAGES;
+    //根据page_num 找到页面指针
+    void* page = get_page(pager, page_num);
+    //查看row_num的偏移量，根据偏移量算出内存偏移量
+    uint32_t offset = row_num % ROW_PER_PAGES;
+    ssize_t offset_bytes = offset * ROW_SIZE;
+    return page + offset_bytes;
+}
+
+void serialize_row(void* target, Row* source) {
+    memcpy(target + ID_OFFSET, &source->id, ID_SIZE);
+    memcpy(target + USERNAME_OFFSET, &source->username, USERNAME_SIZE);
+    memcpy(target + EMAIL_OFFSET, &source->email, EMAIL_SIZE);
+}
+
+/**
+ * 执行插入数据
+ * 
+ * @param statement 
+ * @param table 
+ * @return ExecuteResult 
+ */
+ExecuteResult execute_insert(Statement* statement, Table* table) {
+    Row* row_to_insert = &statement->row_to_insert;
+    void* page = row_slot(table, table->row_nums);
+    serialize_row(page, row_to_insert);
+    table->row_nums++;
+    return EXECUTE_SUCCESS;
+}
+
+/**
+ * 执行查询数据
+ * 
+ * @return ExecuteResult 
+ */
+ExecuteResult execute_select() {
+    //todo
+    return EXECUTE_SUCCESS;
+}
+
+ExecuteResult execute_statement(Statement* statement, Table* table) {
+    switch(statement->type) {
+        case STATEMENT_INSERT:
+            return execute_insert(statement, table);
+        case STATEMENT_SELECT:
+            return execute_select(statement, table);    
+    }
+}
+
 
 
 /**
@@ -254,8 +347,28 @@ int main(int argc, char** argv) {
         switch (prepare_statement(input_buffer, &statement)) {
             case PREPARE_SUCCESS:
                 break;
+            case PREPARE_NEGATIVE_ID:
+                printf("input ID is negative: %s.\n", input_buffer->buffer);
+                continue;
+            case PREPARE_SYNTAX_ERROR:
+                printf("input syntax is error: %s.\n", input_buffer->buffer);
+                continue;
+            case PREPARE_STRING_TOO_LONG:
+                printf("input variable is too long: %s.\n", input_buffer->buffer);
+                continue;
         }
+
+        switch(execute_statement(&statement, table)) {
+            case EXECUTE_SUCCESS:
+                printf("Executed.\n");
+                break;
+            case EXECUTE_FULL_TABLE:
+                printf("Table insertion is full!");
+                break;
+        }
+        del_input_buffer(input_buffer);
     }
+    return 0;
 }
 
 
