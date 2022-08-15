@@ -188,11 +188,11 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
         return PREPARE_SYNTAX_ERROR;
     }
     errno = 0;
-    uint32_t id = strtol(idStr, NULL 10);
+    uint32_t id = strtol(idStr, NULL, 10);
     if(errno != 0) {
         return PREPARE_NEGATIVE_ID;
     }
-    if(strlen(usernmae) > COLUMN_USERNAME) {
+    if(strlen(username) > COLUMN_USERNAME) {
         return PREPARE_STRING_TOO_LONG;
     } 
 
@@ -211,7 +211,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
         return prepare_insert(input_buffer, statement);
     }
 
-    if (strncmp(input_buffer->buffer, "select") == 0) {
+    if (strcmp(input_buffer->buffer, "select") == 0) {
         statement->type = STATEMENT_SELECT;
         return PREPARE_SUCCESS;
     }
@@ -227,7 +227,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
  * @return void* 
  */
 void* get_page(Pager* pager, uint32_t page_num) {
-    if (pager->pages[page_num] == null) {
+    if (pager->pages[page_num] == NULL) {
         void* page = malloc(PAGE_SIZE);
         //查看是否需要从文件中读取，如果有的话
         uint32_t file_page_full_num = pager->file_length / PAGE_SIZE;
