@@ -177,9 +177,33 @@ Table* db_open(const char* filename) {
     return table;
 }
 
-PrepareResult  prepare_insert(InputBuffer* input_buffer, Statement* statement) {
+PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
+    //解析insert语句
     static char* token = " ";
     strtok(input_buffer->buffer, token);
+    char* idStr = strtok(NULL, token);
+    char* username = strtok(NULL, token);
+    char* email = strtok(NULL, token);
+    if (!idStr || !username || !email) {
+        return PREPARE_SYNTAX_ERROR;
+    }
+    errno = 0;
+    uint32_t id = strtol(idStr, NULL 10);
+    if(errno != 0) {
+        return PREPARE_NEGATIVE_ID;
+    }
+    if(strlen(usernmae) > COLUMN_USERNAME) {
+        return PREPARE_STRING_TOO_LONG;
+    } 
+
+    if(strlen(email) > COLUMN_EMAIL) {
+        return PREPARE_STRING_TOO_LONG;
+    }
+    statement->type = STATEMENT_INSERT;
+    statement->row_to_insert.id = id;
+    strcmp(statement->row_to_insert.username, username);
+    strcmp(statement->row_to_insert.email, email);
+    return PREPARE_SUCCESS;
 }
 
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
