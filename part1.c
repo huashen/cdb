@@ -141,7 +141,7 @@ void pager_flush(Pager* pager, uint32_t page_num, uint32_t size) {
         exit(EXIT_FAILURE);
     }
     off_t offset = lseek(pager->file_descriptor, page_num * PAGE_SIZE, SEEK_SET);
-    if (offse == -1) {
+    if (offset == -1) {
         printf("flush seek page at %d, error: %s .\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
