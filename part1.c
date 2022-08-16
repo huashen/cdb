@@ -162,7 +162,30 @@ void db_close(Table* table) {
            free(pager->pages[i]);
            pager->pages[i] = NULL;
        }
-   } 
+   }
+   //多余的row数据也要写入的，除余后将剩余在下一页补上
+   uint32_t additional_num_rows = table->row_nums % ROW_PER_PAGES;
+   if (additional_num_rows > 0) {
+       //下一页坐标，就是上面的full_num_rows
+       const page_num = full_num_rows;
+       if (pager->pages[page_num] != NULL) {
+           pager_flush(pager, page_num, additional_num_rows * ROW_SIZE);
+           free(pager->pages[page_num]);
+           pager->pages[page_num] = NULL;
+       }
+   }
+   int result = close(pager->file_descriptor);
+   if (result == -1) {
+       printf("close file error: %s!\n", strerror(errno));
+       exit(EXIT_FAILURE);
+   }
+   //将所有数据释放掉
+   FORLESS(TABLE_MAX_PAGES) {
+       if (pager->pages[i] != NULL) {
+           pager->pages[i] == NULL;
+       }
+   }
+   del_table(table);
 }
 
 MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) {
