@@ -32,7 +32,6 @@ typedef enum {
 // 执行结果状态码
 typedef enum {
    EXECUTE_SUCCESS,
-   EXECUTE_DUPLICATE_KEY,
    EXECUTE_FULL_TABLE
 } ExecuteResult;
 
@@ -142,7 +141,7 @@ void pager_flush(Pager* pager, uint32_t page_num, uint32_t size) {
     }
     off_t offset = lseek(pager->file_descriptor, page_num * PAGE_SIZE, SEEK_SET);
     if (offset == -1) {
-        printf("flush seek page at %d, error: %s .\n", strerror(errno));
+        printf("flush seek page at %d, error: %s .\n", page_num, strerror(errno));
         exit(EXIT_FAILURE);
     }
     ssize_t write_bytes = write(pager->file_descriptor, pager->pages[page_num], size);
@@ -167,7 +166,7 @@ void db_close(Table* table) {
    uint32_t additional_num_rows = table->row_nums % ROW_PER_PAGES;
    if (additional_num_rows > 0) {
        //下一页坐标，就是上面的full_num_rows
-       const page_num = full_num_rows;
+       const uint32_t page_num = full_num_rows;
        if (pager->pages[page_num] != NULL) {
            pager_flush(pager, page_num, additional_num_rows * ROW_SIZE);
            free(pager->pages[page_num]);
@@ -182,7 +181,7 @@ void db_close(Table* table) {
    //将所有数据释放掉
    FORLESS(TABLE_MAX_PAGES) {
        if (pager->pages[i] != NULL) {
-           pager->pages[i] == NULL;
+           pager->pages[i] = NULL;
        }
    }
    del_table(table);
@@ -346,7 +345,7 @@ ExecuteResult execute_insert(Statement* statement, Table* table) {
  * 
  * @return ExecuteResult 
  */
-ExecuteResult execute_select() {
+ExecuteResult execute_select(Statement* statement, Table* table) {
     //todo
     return EXECUTE_SUCCESS;
 }
@@ -404,6 +403,9 @@ int main(int argc, char** argv) {
                 continue;
             case PREPARE_STRING_TOO_LONG:
                 printf("input variable is too long: %s.\n", input_buffer->buffer);
+                continue;
+            case PREPARE_UNRECOGNIZED_STATEMENT:
+                printf("input unrecognized: %s. \n", input_buffer->buffer);
                 continue;
         }
 
