@@ -249,8 +249,8 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
     }
     statement->type = STATEMENT_INSERT;
     statement->row_to_insert.id = id;
-    strcmp(statement->row_to_insert.username, username);
-    strcmp(statement->row_to_insert.email, email);
+    strcpy(statement->row_to_insert.username, username);
+    strcpy(statement->row_to_insert.email, email);
     return PREPARE_SUCCESS;
 }
 
