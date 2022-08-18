@@ -340,13 +340,27 @@ ExecuteResult execute_insert(Statement* statement, Table* table) {
     return EXECUTE_SUCCESS;
 }
 
+void deserialize_row(Row* target, void* source) {
+    memcpy(&target->id, source + ID_OFFSET, ID_SIZE);
+    memcpy(&target->username, source + USERNAME_OFFSET, USERNAME_SIZE);
+    memcpy(&target->email, source + EMAIL_OFFSET, EMAIL_SIZE);
+}
+
 /**
  * 执行查询数据
  * 
  * @return ExecuteResult 
  */
 ExecuteResult execute_select(Statement* statement, Table* table) {
-    //todo
+    Row row;
+    //简单处理，select时全部打印
+    FORLESS(table->row_nums) {
+        //找到在哪个page的offset 偏移内存点
+        void* page = row_slot(table, i);
+        //将内存信息赋到row中
+        deserialize_row(&row, page);
+        print_row(row);
+    }
     return EXECUTE_SUCCESS;
 }
 
