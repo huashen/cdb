@@ -359,7 +359,7 @@ ExecuteResult execute_select(Statement* statement, Table* table) {
         void* page = row_slot(table, i);
         //将内存信息赋到row中
         deserialize_row(&row, page);
-        print_row(row);
+        print_row(&row);
     }
     return EXECUTE_SUCCESS;
 }
