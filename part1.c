@@ -108,6 +108,12 @@ typedef struct {
     uint32_t row_nums;
 } Table;
 
+typedef struct {
+    Table* table;
+    uint32_t row_num;
+    bool end_of_table;
+} Cursor;
+
 /**数据库操作相关方法**/
 void del_table(Table* table) {
     free(table->pager);
