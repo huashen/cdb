@@ -121,7 +121,7 @@ Cursor* table_start(Table* table) {
     Cursor* cursor = malloc(sizeof(Cursor));
     cursor->table = table;
     cursor->row_num = 0;
-    cursor->end_of_table = table->row_num == 0;
+    cursor->end_of_table = table->row_nums == 0;
 
     return cursor;
 }
@@ -140,19 +140,6 @@ void cursor_advance(Cursor* cursor) {
     if(cursor->row_num >= cursor->table->row_nums) {
         cursor->end_of_table = true;
     }
-}
-
-void* cursor_value(Cursor* cursor) {
-    Pager* pager = cursor->table->pager;
-    uint32_t row_num = cursor->row_num;
-    //首先找到page_num
-    uint32_t page_num = row_num / ROW_PER_PAGES;
-    //根据page_num 找到页面指针
-    void* page = get_page(pager, page_num);
-    //查看row_num的偏移量，根据偏移量算出内存偏移量
-    uint32_t offset = row_num % ROW_PER_PAGES;
-    ssize_t offset_bytes = offset * ROW_SIZE;
-    return page + offset_bytes;
 }
 
 /**数据库操作相关方法**/
@@ -347,6 +334,20 @@ void* get_page(Pager* pager, uint32_t page_num) {
     return pager->pages[page_num];
 }
 
+
+void* cursor_value(Cursor* cursor) {
+    Pager* pager = cursor->table->pager;
+    uint32_t row_num = cursor->row_num;
+    //首先找到page_num
+    uint32_t page_num = row_num / ROW_PER_PAGES;
+    //根据page_num 找到页面指针
+    void* page = get_page(pager, page_num);
+    //查看row_num的偏移量，根据偏移量算出内存偏移量
+    uint32_t offset = row_num % ROW_PER_PAGES;
+    ssize_t offset_bytes = offset * ROW_SIZE;
+    return page + offset_bytes;
+}
+
 /**
  * @brief 获取row_index在内存中位置
  * 
@@ -380,9 +381,9 @@ void serialize_row(void* target, Row* source) {
  * @return ExecuteResult 
  */
 ExecuteResult execute_insert(Statement* statement, Table* table) {
-    Cursor* cursor = table_end(table);
     Row* row_to_insert = &statement->row_to_insert;
-    void* page = cursor_value(table);
+    Cursor* cursor = table_end(table);
+    void* page = cursor_value(cursor);
     serialize_row(page, row_to_insert);
     table->row_nums++;
 
@@ -404,9 +405,9 @@ void deserialize_row(Row* target, void* source) {
 ExecuteResult execute_select(Statement* statement, Table* table) {
     Row row;
     //简单处理，select时全部打印
-    Cursor* cursor = table->start(table);
+    Cursor* cursor = table_start(table);
     while(!cursor->end_of_table) {
-        void* page = cursor->value(cursor);
+        void* page = cursor_value(cursor);
         deserialize_row(&row, page);
         print_row(&row);
         cursor_advance(cursor);
