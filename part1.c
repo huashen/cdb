@@ -109,10 +109,38 @@ typedef struct {
 } Table;
 
 typedef struct {
+    //操作的表
     Table* table;
+    //row位置row_num
     uint32_t row_num;
+    //是否是末尾
     bool end_of_table;
 } Cursor;
+
+Cursor* table_start(Table* table) {
+    Cursor* cursor = malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->row_num = 0;
+    cursor->end_of_table = table->row_num == 0;
+
+    return cursor;
+}
+
+Cursor* table_end(Table* table) {
+    Cursor* cursor = malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->row_num = table->row_nums;
+    cursor->end_of_table = true;
+
+    return cursor;
+}
+
+void cursor_advance(Cursor* cursor) {
+    cursor->row_num += 1;
+    if(cursor->row_num >= cursor->table->row_nums) {
+        cursor->end_of_table = true;
+    }
+}
 
 /**数据库操作相关方法**/
 void del_table(Table* table) {
